@@ -10,8 +10,6 @@
 | Nome | Matrícula | Usuário do GitHub |
 | --- | --- | --- |
 | Dário Souza | 2499103 | DSouza25 |
-| --- | --- | --- |
-| Cauá Gomes | 2404119 | cauagms |
 
 ## O cenário
 
