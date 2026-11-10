@@ -3,8 +3,8 @@
 -- Disciplina: Manipulação de Dados / Banco de Dados II (ADS242N01)
 -- Professor: Aguinaldo Neto
 --
--- Aluno:
--- Matrícula:
+-- Aluno: Dário Souza Silva
+-- Matrícula: 2499103
 --
 -- Escreva cada resposta logo abaixo do comentário da questão.
 -- Comandos que a atividade pede para FALHAR devem ficar comentados,
@@ -21,7 +21,12 @@ CREATE DATABASE hogwarts;
 USE hogwarts;
 
 -- Tabela casa
-
+create table casa(
+	id_casa int primary key auto_increment,
+    nome_casa varchar(30) not null unique,
+    fundador varchar(60),
+    pontos int default 0);
+    
 -- Tabela professor
 
 -- Tabela disciplina
