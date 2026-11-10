@@ -9,7 +9,7 @@
 
 | Nome | Matrícula | Usuário do GitHub |
 | --- | --- | --- |
-|  |  |  |
+| Dário Souza | 2499103 | DSouza25 |
 
 ## O cenário
 
