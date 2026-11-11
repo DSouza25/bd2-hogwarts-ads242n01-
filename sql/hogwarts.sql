@@ -26,44 +26,181 @@ create table casa(
     nome_casa varchar(30) not null unique,
     fundador varchar(60),
     pontos int default 0);
+desc casa;
     
 -- Tabela professor
+create table professor(
+	id_prof int primary key auto_increment,
+    nome varchar(100) not null,
+    salario decimal(10,2) check(salario>0), 
+    data_contratacao date,
+    id_casa int,
+    foreign key(id_casa) references casa(id_casa));
+desc professor;
 
 -- Tabela disciplina
+create table disciplina(
+	id_disc int primary key auto_increment,
+    nome_disc varchar(60) not null unique,
+    ano_minimo int check(ano_minimo between 1 and 7),
+    id_prof int,
+    foreign key(id_prof) references professor(id_prof));
+desc disciplina;
 
 -- Tabela aluno
-
+create table aluno(
+	id_aluno int primary key auto_increment,
+    nome varchar(100) not null,
+    ano_escolar int check(ano_escolar between 1 and 7),
+    saldo_galeoes decimal(10,2) default 0 check(saldo_galeoes >= 0),
+    id_casa int,
+    foreign key(id_casa) references casa(id_casa));
+desc aluno;
+    
 -- Tabela matricula
+create table matricula(
+	id_aluno int,
+    id_disc int,
+    nota decimal(10,2) check(nota between 0 and 10),
+    primary key(id_aluno, id_disc),
+    foreign key(id_aluno) references aluno(id_aluno),
+    foreign key(id_disc) references disciplina(id_disc));
+desc matricula;    
 
 -- Tabela registro_pontos
-
+create table registro_pontos(
+	id_registro int primary key auto_increment, 
+    id_aluno int not null,
+	id_prof int not null, 
+    pontos int not null, 
+    motivo varchar(150), 
+	data_registro date not null,
+    foreign key(id_aluno) references aluno(id_aluno),
+    foreign key(id_prof) references professor(id_prof));
+desc registro_pontos;    
+    
 -- Tabela produto
-
+create table produto(
+	id_produto int primary key auto_increment, 
+    nome_produto varchar(100) not null, 
+    loja varchar(50) not null, 
+    preco decimal(10,2) check(preco>0), 
+    estoque int default 0 check(estoque>=0));
+desc produto;    
+    
 -- Tabela compra
+create table compra(
+	id_compra INT primary key auto_increment, 
+    id_aluno INT,
+	id_produto INT, 
+    quantidade INT check(quantidade > 0),
+	valor_total DECIMAL(10,2),
+	data_compra DATE not null,
+    foreign key(id_aluno) references aluno(id_aluno),
+    foreign key(id_produto) references produto(id_produto));
+desc compra;    
 
 -- Tabela log_auditoria
+create table log_auditoria(
+	id_log int primary key auto_increment, 
+    tabela varchar(30),
+	operacao varchar(10),
+	descricao varchar(255),
+	data_hora datetime default current_timestamp);
+desc log_auditoria;
 
 -- Pergunta para pensar: por que matricula usa chave primária composta?
--- Resposta:
+-- Resposta: Dessa forma, nunca existirá uma matrícula sem o relacionamento aluno-disciplina e só haverá um único registro para cada relacionamento, 
+-- 			 devido ao forte acoplamento proposto. Caso o id fosse auto incrementado, um aluno poderia se matricular mais de uma vez na mesma disciplina.
 
 
 -- =====================================================================
 -- 1.1 CARGA INICIAL DE DADOS (DML)
 -- =====================================================================
 -- INSERT casa
+insert into casa(nome_casa, fundador) values
+	('Grifinória', 'Godric Gryffindor'), 
+	('Sonserina', 'Salazar Slytherin'), 
+	('Corvinal', 'Rowena Ravenclaw'), 
+	('Lufa-Lufa', 'Helga Hufflepuff'); 
+select * from casa;
 
 -- INSERT professor
+insert into professor(nome, salario, data_contratacao, id_casa) values
+	('Minerva McGonagall', 9500.00, '1956-12-01', 1), 
+	('Severo Snape', 8800.00, '1981-09-01', 2), 
+	('Fílio Flitwick', 8200.00, '1974-09-01', 3), 
+	('Pomona Sprout', 7900.00, '1972-09-01', 4), 
+	('Rúbeo Hagrid', 4500.00, '1993-09-01', NULL), 
+	('Remo Lupin', 6200.00, '1993-09-01', NULL), 
+	('Sibila Trelawney', 5100.00, '1980-09-01', NULL), 
+	('Gilderoy Lockhart', 7000.00, '1992-09-01', NULL), 
+	('Horácio Slughorn', 8000.00, '1996-09-01', NULL);
+select * from professor;
 
 -- INSERT disciplina
+insert into disciplina(nome_disc, ano_minimo, id_prof) values
+	('Transfiguração', 1, 1), 
+	('Poções', 1, 2), 
+	('Feitiços', 1, 3), 
+	('Herbologia', 1, 4),
+	('Trato das Criaturas Mágicas', 3, 5), 
+	('Defesa Contra as Artes das Trevas', 1, 6), 
+	('Adivinhação', 3, 7), 
+	('Estudo dos Trouxas', 3, NULL), 
+	('Runas Antigas', 3, NULL); 
+select * from disciplina;
 
 -- INSERT aluno
+insert into aluno(nome, ano_escolar, id_casa, saldo_galeoes) values
+	('Harry Potter', 5, 1, 120.00), 
+	('Hermione Granger', 5, 1, 85.00), 
+	('Rony Weasley', 5, 1, 12.00), 
+	('Neville Longbottom', 5, 1, 30.00), 
+	('Draco Malfoy', 5, 2, 500.00), 
+	('Pansy Parkinson', 5, 2, 150.00), 
+	('Vicente Crabbe', 5, 2, 40.00), 
+	('Luna Lovegood', 4, 3, 45.00), 
+	('Cho Chang', 6, 3, 200.00), 
+	('Padma Patil', 5, 3, 60.00), 
+	('Cedrico Diggory', 7, 4, 180.00), 
+	('Ana Abbott', 5, 4, 25.00), 
+	('Ernesto Macmillan', 5, 4, 70.00), 
+	('Teddy Lupin', 1, NULL, 0.00); 
+select * from aluno;
 
 -- INSERT matricula
+insert into matricula(id_aluno, id_disc, nota) values
+	(1,1,7.5),(1,2,5.0),(1,6,9.8),(1,5,8.0),
+	(2,1,10.0),(2,2,9.5),(2,3,10.0),(2,5,9.0),
+    (2,9,9.5),(3,1,6.0),(3,2,4.5),(3,7,5.5),
+	(4,2,3.0),(4,4,10.0),(4,6,7.0),	(5,2,9.0),
+    (5,1,7.0),(5,5,4.0),(6,2,7.5),(6,7,6.5),
+	(7,2,3.5),(7,6,2.0),(8,5,8.5),(8,3,8.0),
+    (8,4,9.0),(9,3,8.5),(9,6,7.5),(10,3,9.0),
+    (10,7,6.0),(11,4,8.5),(11,6,9.0),(11,1,8.0),
+	(12,4,8.0),(13,4,7.0),(13,3,7.5);
+select * from matricula;
 
 -- INSERT produto
+insert into produto(nome_produto, loja, preco, estoque) values
+	('Varinha de Azevinho', 'Olivaras', 7.00, 10),
+	('Vassoura Nimbus 2001', 'Artigos de Quadribol', 300.00, 3),
+	('Sapo de Chocolate', 'Dedosdemel', 2.00, 200),
+	('Feijõezinhos de Todos os Sabores', 'Dedosdemel', 1.50, 150),
+	('Livro Monstruoso dos Monstros', 'Floreios e Borrões', 12.00, 20),
+	('Caldeirão de Estanho', 'Caldeirões Potage', 9.00, 0),
+	('Kit de Logros', 'Gemialidades Weasley', 25.00, 40),
+	('Pena de Repetição Rápida', 'Escribbulus', 15.00, 5);
+select * from produto;
 
 -- Confira: SELECT COUNT(*) de cada tabela
-
+select count(*) from casa;
+select count(*) from professor;
+select count(*) from disciplina;
+select count(*) from aluno;
+select count(*) from matricula;
+select count(*) from produto;
 
 -- =====================================================================
 -- 2. MANUTENÇÃO PÓS-CARGA (ALTER E UPDATE)
