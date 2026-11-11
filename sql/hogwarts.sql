@@ -206,29 +206,57 @@ select count(*) from produto;
 -- 2. MANUTENÇÃO PÓS-CARGA (ALTER E UPDATE)
 -- =====================================================================
 -- Questão 1
+alter table aluno add column email varchar(100);
+desc aluno;
 
 -- Questão 2
+alter table matricula add column situacao varchar(20) default 'Cursando';
+desc matricula;
 
 -- Questão 3
+alter table produto add column ativo char(1) default 'S';
+desc produto;
 
 -- Questão 4
+alter table casa modify column fundador varchar(100);
+desc casa;
 
 -- Questão 5
+alter table professor rename column data_contratacao to data_admissao;
+desc professor;
 
 -- Questão 6
+update aluno set email = lower(replace(concat(aluno.nome, '@hogwarts.edu'), ' ', '.'));
+select nome, email from aluno;
 
 -- Questão 7
+alter table aluno add constraint uq_aluno_email unique (email);
+desc aluno;
 
 -- Questão 8
+update matricula set nota = least((nota + 0.5), 10) where id_disc = (select id_disc from disciplina where id_disc in (select id_prof from professor where nome like('%lupin%')));
+select nome, nota, nome_disc from matricula join aluno on matricula.id_aluno = aluno.id_aluno join disciplina on matricula.id_disc = disciplina.id_disc where disciplina.id_disc = 6;
 
 -- Questão 9
+update matricula set situacao =
+	case
+		when nota >= 6 then 'Aprovado'
+        else'Reprovado'
+	end;
+select count(situacao) from matricula where situacao = 'Reprovado';
 
 -- Questão 10
+update professor set salario = salario * 1.1 where id_casa is not null and data_admissao < '1980-01-01';
+select * from professor;
 
 -- Questão 11
+update produto set ativo = 'N' where estoque = 0;
+select nome_produto, estoque, ativo from produto;
 
 -- Questão 12
-
+select * from produto;
+update produto set preco = preco * 0.8 where loja = 'Dedosdemel';
+select nome_produto, loja, preco from produto where loja = 'dedosdemel';
 
 -- =====================================================================
 -- 3. REMOÇÃO DE DADOS (DELETE) E TESTES DE RESTRIÇÕES
