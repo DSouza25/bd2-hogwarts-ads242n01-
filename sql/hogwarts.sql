@@ -306,14 +306,28 @@ select nome_produto, loja, preco from produto where loja = 'dedosdemel';
 -- 4. TRIGGERS
 -- =====================================================================
 -- Questão 20 - trg_pontos_casa
+drop trigger if exists trg_pontos_casa;
+delimiter $$
+	create trigger trg_pontos_casa after insert on registro_pontos
+    for each row
+    begin
+		update casa set pontos = pontos + new.pontos where id_casa = (select id_casa from aluno where id_aluno = new.id_aluno);
+	end $$	
+delimiter ;	
+select * from casa; -- verificando os dados da tabela casa antes e depois da inserção
+insert into registro_pontos(id_aluno, id_prof, pontos, motivo, data_registro) values (1,1,-100,'retirando os pontos',curdate()); -- inserção para testes
 
 -- Questão 21 - trg_valida_compra
 
+
 -- Questão 22 - trg_baixa_compra
+
 
 -- Questão 23 - trg_situacao_nota
 
+
 -- Questão 24 - trg_audita_salario
+
 
 -- Pergunta para pensar: por que a validação é BEFORE e a baixa é AFTER?
 -- Resposta:
