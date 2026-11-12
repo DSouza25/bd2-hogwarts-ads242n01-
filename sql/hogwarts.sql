@@ -262,26 +262,44 @@ select nome_produto, loja, preco from produto where loja = 'dedosdemel';
 -- 3. REMOÇÃO DE DADOS (DELETE) E TESTES DE RESTRIÇÕES
 -- =====================================================================
 -- Questão 13
--- Erro:
--- Explicação:
+	delete from casa where nome_casa = 'Sonserina';
+-- Erro: 1451 - não pode excluir ou atualizar uma linha pai;
+-- Explicação: Não é possível excluir esse registro porque existem
+-- registros em outras tabelas que são vinculados a este.
 
 -- Questão 14
--- Erro:
--- Explicação:
+	insert into aluno(nome, ano_escolar, id_casa) values ('Dobby', 8, 1);
+    show create table aluno;
+-- Erro: 3819 - constraint violada;
+-- Explicação: O aluno não pode ser cadastrado pois o ano escolar deve estar entre 1 e 7.
 
 -- Questão 15
--- Erro:
--- Explicação:
+	insert into aluno(nome, ano_escolar, email) values ('Harry Potter (polissuco)', 5, 'harry.potter@hogwarts.edu');
+-- Erro: 1062 - Entrada de dados duplicada;
+-- Explicação: O campo email restringe o uso do mesmo email para mais de um aluno;
 
 -- Questão 16
--- Erro:
--- Explicação:
+	delete from professor where nome = 'Severo Snape';
+-- Erro: 1451 - Não é possível excluir ou atualizar uma linha pai;
+-- Explicação: Não é possível excluir esse registro porque existem
+-- registros em outras tabelas que são vinculados a este.
 
 -- Questão 17
+	delete from professor where nome = 'Gilderoy Lockhart';
+    select * from disciplina;
+-- Erro: Sem erro;
+-- Explicação: Este professor não tem nenhum outro registro que dependa dele como chave;
 
 -- Questão 18
+	select * from matricula;
+	delete from matricula where id_aluno = (select id_aluno from aluno where nome = 'Vicente Crabbe');
+    delete from aluno where nome = 'Vicente Crabbe';
+    select * from aluno;
 
 -- Questão 19
+	select * from disciplina;
+    select * from matricula;
+    delete from disciplina where id_disc not in (select id_disc from matricula join aluno where matricula.id_aluno = aluno.id_aluno);
 
 
 -- =====================================================================
