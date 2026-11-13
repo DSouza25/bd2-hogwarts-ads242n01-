@@ -348,31 +348,99 @@ delimiter ;
 
 -- Questão 22 - trg_baixa_compra
 
+drop trigger if exists trg_baixa_compra;
+delimiter $$
+	create trigger trg_baixa_compra after insert on compra
+    for each row
+    begin
+		update produto set estoque = produto.estoque - new.quantidade where id_produto = new.id_produto;
+        update aluno set saldo_galeoes = saldo_galeoes - new.valor_total where id_aluno = new.id_aluno;
+    end $$
+delimiter ;
 
 -- Questão 23 - trg_situacao_nota
-
+drop trigger if exists trg_situacao_automatica;
+delimiter $$
+	create trigger trg_situacao_automatica before update on matricula
+    for each row
+    begin
+		set new.situacao =
+		case
+			when new.nota >= 6 then 'Aprovado'
+			else'Reprovado'
+		end;
+	end $$
+delimiter ;
 
 -- Questão 24 - trg_audita_salario
-
+drop trigger if exists trg_audita_salario;
+delimiter $$
+	create trigger trg_audita_salario after update on professor
+    for each row
+    begin
+		if old.salario <> new.salario then 
+			insert into log_auditoria(tabela, operacao, descricao, data_hora) 
+            values ('professor', 'update', concat(new.nome, ': ', 'Salário atualizado de ', old.salario, ' para ', new.salario), now());
+		end if;
+    end $$
+delimiter ;
 
 -- Pergunta para pensar: por que a validação é BEFORE e a baixa é AFTER?
--- Resposta:
+-- Resposta: Porque a compra não pode acontecer se estiver com dados incompatíveis, já a baixa do estoque é uma atualização com possibilidade já validada pela compra;
 
 -- Questão 25 - INSERT registro_pontos
-
+insert into registro_pontos(id_aluno, id_prof, pontos, motivo, data_registro) values
+	( 2, 3, 20, 'Feitiço de levitação perfeito', '2026-09-10'),
+	( 1, 2, -10, 'Atraso na aula de Poções', '2026-09-12'),
+	( 5, 2, 15, 'Poção do Morto-Vivo impecável', '2026-09-12'),
+	( 8, 5, 10, 'Cuidou de um testrálio ferido', '2026-09-20'),
+	(11, 4, 25, 'Ajudou os alunos do 1º ano', '2026-09-25'),
+	( 4, 4, 30, 'Identificou uma Mimbulus mimbletonia', '2026-10-02'),
+	( 6, 1, -20, 'Fora da cama após o toque de recolher', '2026-10-05'),
+	( 1, 6, 50, 'Conjurou um Patrono corpóreo', '2026-10-15'),
+	( 9, 3, 15, 'Duelo exemplar no Clube de Duelos', '2026-10-18'),
+	( 5, 1, -30, 'Duelo proibido no corredor', '2026-10-31'),
+	(10, 7, 5, 'Interpretação da bola de cristal', '2026-11-03'),
+	(13, 4, 10, 'Colheita de mandrágoras', '2026-11-05'),
+	( 3, 9, 10, 'Identificou um bezoar', '2026-11-06'),
+	( 8, 3, 20, 'Resposta brilhante sobre o Diadema', '2026-11-08'),
+	( 6, 2, 25, 'Antídoto para venenos comuns', '2026-11-09'),
+	( 5, 9, 40, 'Melhor poção do Clube do Slugue', '2026-11-09');
+    
 -- Questão 25 - INSERT compra
+insert into compra(id_aluno, id_produto, quantidade, data_compra) values 
+	( 5, 2, 1, '2026-09-01'),
+	( 2, 5, 2, '2026-09-02'),
+	( 1, 3, 10, '2026-09-03'),
+	( 3, 4, 5, '2026-09-03'),
+	( 9, 8, 1, '2026-09-15'),
+	( 8, 5, 1, '2026-09-20'),
+	(11, 1, 1, '2026-10-01'),
+	( 6, 3, 20, '2026-10-10'),
+	( 1, 7, 2, '2026-10-20'),
+	(13, 4, 10, '2026-11-02');
 
 -- Questão 25 - Rony tenta comprar a Nimbus
--- Resultado:
+insert into compra(id_aluno, id_produto, quantidade, data_compra) values (3, 2, 1, now());
+-- Resultado: insert não realizado porque esse liso não tem dinheiro pra comprar uma vassoura;
 
 -- Questão 25 - Hermione tenta comprar o caldeirão
--- Resultado:
+insert into compra(id_aluno, id_produto, quantidade, data_compra) values (2, 6, 1, now());
+-- Resultado: Compra não realizada por falta de estoque;
 
 -- Questão 25 - Recuperação do Rony em Poções
+select * from matricula where id_aluno = 3;
+update matricula set nota = 6.5 where id_aluno = 3 and id_disc = 2;
+show triggers;
+-- a trigger foi executada com sucesso e a situacao foi mudada automaticamente;
 
 -- Questão 25 - Salário e data de admissão do Hagrid
+select * from professor;
+update professor set salario = 5000 where id_prof = 5;
 -- Linhas em log_auditoria:
--- Por que o reajuste da questão 10 não aparece:
+select * from log_auditoria;
+update professor set data_admissao = '1993-08-15';
+-- Por que o reajuste da questão 10 não aparece: porque a trigger foi criada depois da alteração. Sendo assim, ela só interage com as alterações feitas depois da sua criação.
 
 
 -- =====================================================================
