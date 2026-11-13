@@ -319,6 +319,32 @@ insert into registro_pontos(id_aluno, id_prof, pontos, motivo, data_registro) va
 
 -- Questão 21 - trg_valida_compra
 
+drop trigger if exists trg_valida_compra;
+delimiter $$
+	create trigger trg_valida_compra before insert on compra
+    for each row
+    begin
+		declare v_saldo decimal(10,2);
+        declare v_estoque int;
+        declare v_preco decimal(10,2);
+        select saldo_galeoes into v_saldo from aluno where id_aluno = new.id_aluno;
+        select estoque, preco into v_estoque, v_preco from produto where id_produto = new.id_produto;
+        case
+			when v_estoque < new.quantidade then signal sqlstate '45000' set message_text = 'Estoque insuficiente no Beco Diagonal';
+			when v_saldo < (v_preco * new.quantidade) then signal sqlstate '45000' set message_text = 'Galeões insuficientes no cofre do aluno';
+            else set new.valor_total = (v_preco * new.quantidade);
+		end case;
+    end $$
+delimiter ;
+
+ -- zona de testes -- 
+ select * from produto;
+ select * from aluno;
+ insert into compra(id_aluno, id_produto, quantidade, data_compra) values (8, 2, 1, curdate()); -- sem grana
+ insert into compra(id_aluno, id_produto, quantidade, data_compra) values (1, 1, 11, curdate()); -- estoque insuficiente
+ insert into compra(id_aluno, id_produto, quantidade, data_compra) values (1, 1, 1, curdate()); -- tudo certo
+ -- todos os comandos ocorreram como o esperado
+-- ---------------------------------------------------------
 
 -- Questão 22 - trg_baixa_compra
 
