@@ -447,15 +447,44 @@ update professor set data_admissao = '1993-08-15';
 -- 5. CONTROLE DE TRANSAÇÕES (TCL)
 -- =====================================================================
 -- Questão 26
-
+select * from aluno;
+start transaction;
+	update aluno set saldo_galeoes = saldo_galeoes - 50 where id_aluno = 5;
+	update aluno set saldo_galeoes = saldo_galeoes + 50 where id_aluno = 6;
+commit;
+	
 -- Questão 27
+start transaction;
+	update casa set pontos = 0;
+    select * from casa;
+rollback;
+select * from casa;
 
 -- Questão 28
+start transaction;
+	insert into compra(id_aluno, id_produto, quantidade, data_compra) values(1, 1, 1, '2026-11-10');
+rollback;
+select * from aluno;
+select * from produto;
+-- consultei a tabela antes do start, depois do insert e depois do rollback. Após o rollback as tabelas voltaram a ter os mesmos dados da consulta de antes do start.
 
 -- Questão 29
+start transaction;
+	select * from casa;
+	insert into registro_pontos(id_aluno, id_prof, pontos, motivo, data_registro) values
+		(12, 4, 15, 'Cuidou das estufas no feriado', '2026-11-10');
+	savepoint sp_pontos_legitimos;
+    select * from casa;
+	insert into registro_pontos(id_aluno, id_prof, pontos, motivo, data_registro) values
+		(6, 2, 100, 'favoritismo descarado', '2026-11-10');
+	select * from casa;
+	rollback to savepoint sp_pontos_legitimos;
+	select * from casa;
+commit;
 
 -- Questão 30
--- Resposta:
+select @@autocommit;
+-- Resposta: o mysql vai ignorar o comando 'commit' e salvar definitivamente todas as alterações feitas.
 
 
 -- =====================================================================
