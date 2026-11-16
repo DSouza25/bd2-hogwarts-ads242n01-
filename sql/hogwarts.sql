@@ -493,72 +493,172 @@ select @@autocommit;
 -- ---------- Nível 1: filtros e operadores especiais ----------
 
 -- 6.1
+select nome as vulgo, salario as esmola from professor where salario between 6000 and 9000 order by esmola desc;
 
 -- 6.2
+select nome, ano_escolar as serie from aluno where ano_escolar in (1, 4, 6, 7) order by serie;
 
 -- 6.3
+select nome from aluno where nome like ('_a%');
 
 -- 6.4
+select nome_disc as disciplina, id_prof as professor from disciplina where id_prof is null;
 
 -- 6.5
+select nome_produto as produto, preco from produto where preco not between 5 and 20;
 
 -- 6.6
+select distinct loja from produto;
 
 -- ---------- Nível 2: JOINs ----------
 
 -- 6.7
--- Quantos alunos e por quê:
+select nome, nome_casa as casa from aluno join casa on aluno.id_casa = casa.id_casa order by casa;
+-- Quantos alunos e por quê: aparecem 12 aluno porque um dos alunos cadastrados ainda não tem uma casa definida.
 
 -- 6.8
+select nome, coalesce(nome_casa, 'Aguardando chapéu seletor...') as casa from aluno left join casa on aluno.id_casa = casa.id_casa;
 
 -- 6.9
+select nome, nome_disc as disciplina from disciplina right join professor on disciplina.id_prof = professor.id_prof where nome_disc is null;
 
 -- 6.10
+select aluno.nome as nome, nome_disc as disciplina, professor.nome as professor, nota, situacao
+from aluno 
+join casa on aluno.id_casa = casa.id_casa
+join matricula on aluno.id_aluno = matricula.id_aluno
+join disciplina on matricula.id_disc = disciplina.id_disc
+left join professor on disciplina.id_prof = professor.id_prof
+where casa.id_casa = 1
+order by nome, professor;
 
 -- 6.11
+select id_compra as 'nº compra', aluno.nome, nome_produto as produto, loja, quantidade, valor_total as total, data_compra as data from compra
+join aluno on compra.id_aluno = aluno.id_aluno
+join produto on compra.id_produto = produto.id_produto
+order by data_compra;
 
 -- ---------- Nível 3: agrupamento e agregação ----------
 
 -- 6.12
-
+select nome_disc, count(*) as 'Qtd alunos', round(avg(matricula.nota), 2) as media, max(nota) as 'Maior nota', min(nota) as 'Menor nota'from disciplina 
+	join matricula on disciplina.id_disc = matricula.id_disc
+    group by nome_disc
+    having media >= 7
+    order by media desc;
+    
 -- 6.13
+select
+    nome_casa, 
+    count(*) as 'nº  registros', 
+    sum(case when registro_pontos.pontos > 0 then registro_pontos.pontos else 0 end) as 'Pontos ganhos',
+    sum(case when registro_pontos.pontos < 0 then registro_pontos.pontos else 0 end)*-1 as 'Pontos perdidos',
+    casa.pontos as Saldo 
+from casa 
+join aluno on aluno.id_casa = casa.id_casa
+join registro_pontos on aluno.id_aluno = registro_pontos.id_aluno
+group by nome_casa
+order by saldo desc;
 
 -- 6.14
+select Loja, count(*) as Vendas, sum(valor_total) as Faturamento
+from produto
+join compra on produto.id_produto = compra.id_produto
+group by loja
+having faturamento > 20
+order by faturamento desc;
 
 -- 6.15
+select monthname(data_registro) as Mês, count(*) as 'Nº registros', sum(pontos) as Total
+from registro_pontos
+group by mês
+order by mês desc;
 
 -- 6.16
+select Nome, count(*) as Registros, sum(case when registro_pontos.pontos > 0 then registro_pontos.pontos else 0 end) as Pontos 
+from professor
+join registro_pontos on professor.id_prof = registro_pontos.id_prof
+group by nome
+having registros >= 2
+order by pontos desc;
 
 -- ---------- Nível 4: subconsultas ----------
 
 -- 6.17
+select nome as 'Alunos que compraram na Dedosdemel' from aluno where id_aluno in (select id_aluno from compra where id_produto in (select id_produto from produto where loja = 'Dedosdemel'));
 
 -- 6.18
+select id_produto, nome_produto as 'Produto encalhado', estoque as Estoque from produto where id_produto not in (select id_produto from compra);
+ ## tecnicamente, esse produto não tá encalhado, já que não tem nenhum no estoque...
 
 -- 6.19
+select nome, saldo_galeoes as G$ from aluno where saldo_galeoes > (select avg(saldo_galeoes) from aluno);
 
 -- 6.20
+select nome, salario from professor where salario > all (select salario from professor where id_casa is null);
 
 -- 6.21
--- > ANY equivale a:
+select nome, saldo_galeoes as saldo from aluno where id_casa <> 2 and saldo_galeoes > any (select saldo_galeoes from aluno where id_casa = 2);
+-- > ANY equivale a: some(algum) / quando a lógica é verdadeira para pelo menos 1 item na lista;
 
 -- 6.22
+select nome_casa as Casa 
+from casa 
+where exists(
+	select * from aluno
+    join matricula on matricula.id_aluno = aluno.id_aluno 
+    where nota = 10 and casa.id_casa = aluno.id_casa
+);
 
 -- 6.23
+select nome as Lisos
+from aluno where not exists(
+	select * from compra
+    where compra.id_aluno = aluno.id_aluno
+);
 
 -- 6.24
+select nome_casa as Casa, round(avg(media), 2) as 'Media da casa'
+from casa
+join
+	(select nome, avg(nota) as media, id_casa
+	from aluno
+	join matricula on aluno.id_aluno = matricula.id_aluno
+	group by nome, id_casa) as t
+on casa.id_casa = t.id_casa
+group by casa;
+
 
 -- ---------- Nível 5: UNION ALL ----------
 
 -- 6.25
+select nome, (case when nome in (select nome from professor) then 'Professor' else 'Aluno' end) as Vínculo
+from (
+	select nome from aluno 
+    union all 
+    select nome from professor) as Nomes;
+
 
 -- 6.26
--- Linhas com UNION ALL:
--- Linhas com UNION:
--- Explicação:
+select nome from aluno
+join compra on aluno.id_aluno = compra.id_aluno
+union
+select nome from aluno
+join registro_pontos on aluno.id_aluno= registro_pontos.id_aluno;
+
+-- Linhas com UNION ALL: 31
+-- Linhas com UNION: 12
+-- Explicação: "Union" elimina os valores duplicados, enquanto "union all" retorna todos os valores, ainda que repetidos;
 
 -- 6.27
-
+select 'Pontos distribuídos' as indicador, sum(pontos) as valor from registro_pontos
+union all
+select 'Galeões gastos' as indicador, sum(valor_total) as valor from compra
+union all
+select 'Folha salarial' as indicador, sum(salario) as valor from professor
+union all
+select 'Galeões no cofre' as indicador, sum(saldo_galeoes) as valor from aluno;
+    
 
 -- =====================================================================
 -- 7. VIEWS
