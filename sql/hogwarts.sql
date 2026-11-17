@@ -642,7 +642,7 @@ from (
 -- 6.26
 select nome from aluno
 join compra on aluno.id_aluno = compra.id_aluno
-union
+union all
 select nome from aluno
 join registro_pontos on aluno.id_aluno= registro_pontos.id_aluno;
 
@@ -655,7 +655,7 @@ select 'Pontos distribuídos' as indicador, sum(pontos) as valor from registro_p
 union all
 select 'Galeões gastos' as indicador, sum(valor_total) as valor from compra
 union all
-select 'Folha salarial' as indicador, sum(salario) as valor from professor
+select 'Folha professores' as indicador, sum(salario) as valor from professor
 union all
 select 'Galeões no cofre' as indicador, sum(saldo_galeoes) as valor from aluno;
     
@@ -664,19 +664,90 @@ select 'Galeões no cofre' as indicador, sum(saldo_galeoes) as valor from aluno;
 -- 7. VIEWS
 -- =====================================================================
 -- Questão 31
+create or replace view vw_placar_casas as
+	select nome_casa, pontos, fundador from casa;
+    
+select * from vw_placar_casas;
 
 -- Questão 32
+create or replace view vw_boletim as
+	select aluno.nome as Aluno,
+			coalesce(nome_casa, 'Sem casa') as Casa, 
+            nome_disc as Disciplina, 
+            coalesce(professor.nome, 'Sem professor') as Professor, 
+            nota as Nota, 
+            situacao as Situacao
+    from aluno
+    left join matricula on aluno.id_aluno = matricula.id_aluno
+    left join casa on aluno.id_casa = casa.id_casa
+    left join disciplina on disciplina.id_disc = matricula.id_disc
+    left join professor on disciplina.id_prof = professor.id_prof
+    order by Aluno;
+    
+select * from vw_boletim;
 
 -- Questão 33
+create or replace view vw_extrato_loja as
+	select 
+		nome as Aluno,
+        nome_produto as Produto,
+        loja as Loja,
+        quantidade as Quantidade,
+        valor_total as Total,
+        data_compra as 'Data da compra'
+	from aluno
+    join compra on aluno.id_aluno = compra.id_aluno
+    join produto on compra.id_produto = produto.id_produto
+    order by data_compra;
 
+select * from vw_extrato_loja;
 -- Questão 34
+create or replace view vw_alunos_destaque as
+	select nome as aluno, nome_casa as casa, round(media, 2) as media
+	from (
+		select id_aluno, avg(nota) as media from matricula
+		group by id_aluno
+		having media >= 8
+		) as boletim
+	join aluno on aluno.id_aluno = boletim.id_aluno
+	join casa on aluno.id_casa = casa.id_casa
+	order by media desc;
+
+select * from vw_alunos_destaque;
 
 -- Questão 35
+create or replace view vw_quadro_professores as
+	select
+		nome as Professor,
+		coalesce(nome_casa, 'Não é diretor') as Casa,
+		qtd_disc as Disciplinas,
+		coalesce(pontos_distribuidos, 0) as Pontos_concedidos
+	from professor
+	left join casa on professor.id_casa = casa.id_casa
+	left join (
+		select id_prof, count(*) as qtd_disc
+		from disciplina 
+		group by id_prof) as disciplinas
+	on professor.id_prof = disciplinas.id_prof
+	join (
+		select id_prof, sum(case when pontos > 0 then pontos else 0 end) as pontos_distribuidos
+		from registro_pontos
+		group by id_prof) as tb_pontos
+	on professor.id_prof = tb_pontos.id_prof;
 
+select * from vw_quadro_professores;
 -- Questão 36
+select * from vw_placar_casas;
+select * from vw_boletim;
+select Loja, sum(Total) as Faturamento from vw_extrato_loja group by Loja;
+select * from vw_alunos_destaque order by media desc;
+select * from vw_quadro_professores order by Pontos_concedidos desc;
 
 -- Questão 37
--- O que mudou e por quê:
+insert into 
+registro_pontos(id_aluno, id_prof, pontos, motivo, data_registro) 
+values (11, 1, 20,'Venceu a primeira tarefa do torneio', '2026-11-10');
+-- O que mudou e por quê: O número de pontos da casa Lufa-Lufa aumentou, porque ao inserir os pontos para cedrico, um trigger da tabela registro_pontos foi ativo e alterou os dados na tabela casa.
 
 -- Questão 38
 
