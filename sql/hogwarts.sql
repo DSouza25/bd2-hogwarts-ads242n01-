@@ -763,25 +763,58 @@ select * from vw_placar_casas; -- ok
 -- 8. CONTROLE DE ACESSO (DCL)
 -- =====================================================================
 -- Questão 39
+create user 'filch' identified by 'MadameNorra#1';
+create user 'mcgonagall' identified by'Animago#Gato1';
+create user 'dumbledore' identified by 'Fenix#Fawkes1';
 
 -- Questão 40
+grant select on hogwarts.vw_placar_casas to 'filch';
 
 -- Questão 41
+grant select, insert on hogwarts.registro_pontos to 'mcgonagall';
+grant select on hogwarts.aluno to 'mcgonagall';
+grant select on hogwarts.vw_boletim to 'mcgonagall';
 
 -- Questão 42
+grant all privileges on hogwarts.* to 'dumbledore' with grant option;
 
 -- Questão 43
+show grants for 'filch';
+show grants for 'mcgonagall';
 
 -- Questão 44
 -- Resultado de cada comando:
+	-- select * from vw_placar_casas LIMIT 0, 1000	4 row(s) returned	0,00100 sec / 0,000017 sec
+    -- select * from aluno LIMIT 0, 1000	Error Code: 1142. SELECT command denied to user 'filch'@'localhost' for table 'aluno'	0,00052 sec
 
 -- Questão 45
--- Como o trigger conseguiu atualizar a casa:
+## insert into registro_pontos(id_aluno, id_prof, pontos, motivo, data_registro) values  (2, 1, 10, 'Ajudou um colega em Transfiguração', '2026-11-10')	1 row(s) affected	0,012 sec
+## update casa set pontos = 1000 where id_casa = 1	Error Code: 1142. UPDATE command denied to user 'mcgonagall'@'localhost' for table 'casa'	0,00056 sec
+
+-- Como o trigger conseguiu atualizar a casa: por padrão, o trigger tem permissão de admin pra executar comandos.
 
 -- Questão 46
+revoke insert on hogwarts.registro_pontos from 'mcgonagall';
+show grants for 'mcgonagall';
 
 -- Questão 47
--- Vantagem dos papéis:
+create role monitor;
+grant select on hogwarts.vw_boletim to monitor;
+grant select on hogwarts.vw_placar_casas to monitor;
+create user 'percy'@'localhost' identified by 'Monitor#Chefe1';
+grant monitor to 'percy'@'localhost';
+set default role monitor to 'percy'@'localhost';
+
+-- Vantagem dos papéis: todo usuário com aquela role tem aquelas permissões e eu posso trocar usuários de roles ou removelos sem precisar ficar retirando permissão por permissão;
 
 -- Questão 48
+select user from mysql.user;
+drop user if exists 'filch';
+drop user if exists'mcgonagall';
+drop user if exists 'dumbledore';
+drop role if exists monitor;
 
+################# zona de conferência ######################
+-- falha na consulta [ok]
+select * from vw_placar_casas; -- [ok]
+###########################################################
