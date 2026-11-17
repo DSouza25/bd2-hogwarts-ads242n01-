@@ -750,7 +750,14 @@ values (11, 1, 20,'Venceu a primeira tarefa do torneio', '2026-11-10');
 -- O que mudou e por quê: O número de pontos da casa Lufa-Lufa aumentou, porque ao inserir os pontos para cedrico, um trigger da tabela registro_pontos foi ativo e alterou os dados na tabela casa.
 
 -- Questão 38
-
+create or replace view vw_placar_casas as
+	select nome_casa, pontos, fundador from casa;
+    
+################# zona de conferência ######################
+select * from vw_alunos_destaque; -- ok ok
+select * from vw_quadro_professores order by Pontos_concedidos desc; -- parâmetro incorreto || Pontos CONCEDIDOS não podem ser negativos.
+select * from vw_placar_casas; -- ok
+###########################################################
 
 -- =====================================================================
 -- 8. CONTROLE DE ACESSO (DCL)
